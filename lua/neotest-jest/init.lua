@@ -20,6 +20,7 @@ local rootPackageJson = vim.fn.getcwd() .. "/package.json"
 
 ---@return boolean
 local function rootProjectHasJestDependency()
+  local jestDependencies = { "jest", "react-scripts" }
   local path = rootPackageJson
 
   local success, packageJsonContent = pcall(lib.files.read, path)
@@ -32,16 +33,20 @@ local function rootProjectHasJestDependency()
 
   if parsedPackageJson["dependencies"] then
     for key, _ in pairs(parsedPackageJson["dependencies"]) do
-      if key == "jest" then
-        return true
+      for _, ext in ipairs(jestDependencies) do
+        if key == ext then
+          return true
+        end
       end
     end
   end
 
   if parsedPackageJson["devDependencies"] then
     for key, _ in pairs(parsedPackageJson["devDependencies"]) do
-      if key == "jest" then
-        return true
+      for _, ext in ipairs(jestDependencies) do
+        if key == ext then
+          return true
+        end
       end
     end
   end
