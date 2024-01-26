@@ -12,6 +12,7 @@ local parameterized_tests = require("neotest-jest.parameterized-tests")
 ---@field env? table<string, string>|fun(): table<string, string>
 ---@field cwd? string|fun(): string
 ---@field strategy_config? table<string, unknown>|fun(): table<string, unknown>
+---@field testFileNames? table<string>|fun(): table<string>
 
 ---@type neotest.Adapter
 local adapter = { name = "neotest-jest" }
@@ -97,6 +98,10 @@ end
 local getJestCommand = jest_util.getJestCommand
 local getJestConfig = jest_util.getJestConfig
 
+local function getTestFileNames(test_file_names)
+  return test_file_names
+end
+
 ---@param file_path? string
 ---@return boolean
 function adapter.is_test_file(file_path)
@@ -109,7 +114,10 @@ function adapter.is_test_file(file_path)
     is_test_file = true
   end
 
-  for _, x in ipairs({ "spec", "e2e%-spec", "test", "unit", "regression", "integration" }) do
+  local default_test_file_names =
+    { "spec", "e2e%-spec", "test", "unit", "regression", "integration" }
+
+  for _, x in ipairs(getTestFileNames(default_test_file_names)) do
     for _, ext in ipairs({ "js", "jsx", "coffee", "ts", "tsx" }) do
       if string.match(file_path, "%." .. x .. "%." .. ext .. "$") then
         is_test_file = true
@@ -519,6 +527,13 @@ setmetatable(adapter, {
     elseif opts.strategy_config then
       getStrategyConfig = function()
         return opts.strategy_config
+      end
+    end
+    if is_callable(opts.testFileNames) then
+      getTestFileNames = opts.testFileNames
+    elseif opts.testFileNames then
+      getTestFileNames = function()
+        return opts.testFileNames
       end
     end
 
